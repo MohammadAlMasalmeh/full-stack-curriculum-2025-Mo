@@ -1,0 +1,16 @@
+* {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    margin: 0%;
+}
+
+h1 {
+    color: darkblue;
+    font-size: 90;
+    text-align: center;   
+}
+
+intput {
+    margin-left: 5px;
+    border-radius: 5px;
+    border: 1px solid black;
+}
