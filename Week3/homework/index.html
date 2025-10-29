@@ -23,7 +23,7 @@
 
 <script>
 		// USE YOUR OWN API KEY
-		const apiKey = "";
+		const apiKey = "7823061fcbf561b2342325bc9feb222a";
 
         // variable that stores the city that is chosen
 		let city;
@@ -31,6 +31,8 @@
 		let weather;
         // the variable that stores the air quality index for the city
 		let aqi;
+		// the varbiale that stores the temp
+		let temp;
 
 		// function that accepts that a number N and returns the name of the day and the date N days from now as a string
 		function formatDate(daysFromNow = 0) {
@@ -88,7 +90,7 @@
 
 		// function that is called whenever a city has been selected
 		// HINT: think about what should be rendering on the screen whenever a city is selected and what information is needed to make that happen 
-		function selectCity(fullName, name, state, lat, lon) {
+		async function selectCity(fullName, name, state, lat, lon) {
 			// hides the search-results-list since it is not needed right now
 			document.querySelector('#search-results-list').className = 'hidden'
 			// sets the global city variable
@@ -103,6 +105,83 @@
 			//printing the city object to the console
 			console.log(city);
             // BEGIN CODING HERE
+			// create the API call to get the weather and forecast for the selected city using OpenWeatherMap's One Call API
+			let weatherApiCall = `https://api.openweathermap.org/data/2.5/forecast?lat=${city.lat}&lon=${city.lon}&appid=${apiKey}&units=imperial`;
+			let weatherResponse = await fetch(weatherApiCall);
+			weather = await weatherResponse.json();
+
+			console.log(weather);
+
+			// fetch the air quality for the selected city using OpenWeatherMap's Air Pollution API
+			let aqiApiCall = `http://api.openweathermap.org/data/2.5/air_pollution?lat=${city.lat}&lon=${city.lon}&appid=${apiKey}`;
+			let aqiResponse = await fetch(aqiApiCall);
+			aqi = await aqiResponse.json();
+
+			// show the weather on the screen by calling the renderWeather() function
+			renderWeather();
+		}
+
+		function renderWeather(){
+			const container = document.querySelector("#weather-container");
+			container.innerHTML = '';
+			// BEGIN CODING HERE
+			// fdind the date
+			const date = document.createElement('h2');
+			date.textContent = formatDate();
+			container.appendChild(date);
+
+			// find the city name
+			const cityName = document.createElement('h1');
+			cityName.textContent = city.fullName;
+			container.appendChild(cityName);
+			// find the temperature
+			const temp = document.createElement('p');
+			temp.textContent = `Temperature: ${weather.list[0].main.temp} °F`;
+			container.appendChild(temp);
+			// find the weather description
+			const description = document.createElement('p');
+			description.textContent = `Weather: ${weather.list[0].weather[0].description}`;
+			container.appendChild(description);
+
+			// create the current weather section and append it to the weather-container
+			const curWeatherDiv = document.createElement('div');
+			curWeatherDiv.setAttribute('id', 'current-weather');
+			container.appendChild(curWeatherDiv);
+
+			// create the forecast section and append it to the weather-container
+			const forecastDiv = document.createElement('div');
+			forecastDiv.setAttribute('id', 'forecast');
+			container.appendChild(forecastDiv);
+
+			// create the air quality section and append it to the weather-container
+			const aqiDiv = document.createElement('div');
+			aqiDiv.setAttribute('id', 'air-quality');
+			container.appendChild(aqiDiv);
+
+			const forecastContainer = document.createElement('div');
+			forecastContainer.setAttribute('id', 'forecast-container');
+			// do the same for the rest of the days in a smaller list under
+			for(let day = 1; day <=5; day++){
+				const dayCard = document.createElement('div')
+                dayCard.setAttribute('class', 'day-card')
+                const dayDate = document.createElement('h3')
+                dayDate.innerHTML = formatDate(day)
+                dayCard.appendChild(dayDate)
+				// find weather icon for the day
+				const iconCode = weather.list[day].weather[0].icon
+				const iconImg = document.createElement('img')
+				iconImg.setAttribute("src", `./icons/${iconCode}.svg`)
+				dayCard.appendChild(iconImg);
+				
+                // find high and low temps for the day
+                let highTemp = Math.round(weather.list[day].main.temp_max)
+                let lowTemp = Math.round(weather.list[day].main.temp_min)
+                const tempBounds = document.createElement('h4')
+                tempBounds.innerHTML = `${lowTemp}° to ${highTemp}°`
+                dayCard.appendChild(tempBounds)
+                forecastContainer.appendChild(dayCard)
+			}
+			container.appendChild(forecastContainer);
 		}
 	</script>
 </html>
