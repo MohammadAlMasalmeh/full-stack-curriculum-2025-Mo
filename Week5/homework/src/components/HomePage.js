@@ -31,15 +31,21 @@ export default function HomePage() {
   // to fetch the list of tasks instead of using the hardcoded data.
 
   useEffect(() => {
-    if(!currentUser){
+    if (!currentUser) {
       navigate("/login");
-    }else {
-      fetch(`https://tpeo-todo.vercel.app/tasks/${currentUser}`)
-        .then((response) => response.json())
-        .then((data) => setTaskList(data))
-        .catch((error) => console.error("FAILED TO FETCH: ", error));
+    } else {
+      currentUser.getIdToken().then(token => {
+        fetch(`${process.env.REACT_APP_BACKEND}/tasks/${currentUser.uid}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+          .then((response) => response.json())
+          .then((data) => setTaskList(data))
+          .catch((error) => console.error("FAILED TO FETCH: ", error));
+      });
     }
-  }, [currentUser])
+  }, [currentUser, navigate])
 
 
 
@@ -51,19 +57,24 @@ export default function HomePage() {
       // In addition to updating the state directly, you should send a request
       // to the API to add a new task and then update the state based on the response.
 
-      fetch(`https://tpeo-todo.vercel.app/tasks`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ user: currentUser, name: newTaskName, finished: false }),
-      })
-      .then((response) => response.json())
-      .then((data) => {
-        setTaskList([...taskList, data]);
-        setNewTaskName("");
-      })
-      .catch(error => console.error("FAILED TO ADD TASK: ", error));
+      console.log("Adding task...");
+      currentUser.getIdToken().then(token => {
+        fetch(`${process.env.REACT_APP_BACKEND}/tasks`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ user: currentUser.uid, name: newTaskName, finished: false }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Task added:", data);
+            setTaskList([...taskList, data]);
+            setNewTaskName("");
+          })
+          .catch(error => console.error("FAILED TO ADD TASK: ", error));
+      });
     } else if (taskList.some((task) => task.name === newTaskName)) {
       alert("Task already exists!");
     }
@@ -75,15 +86,20 @@ export default function HomePage() {
     // TODO: Support removing/checking off todo items in your todo list through the API.
     // Similar to adding tasks, when checking off a task, you should send a request
     // to the API to update the task's status and then update the state based on the response.
-    fetch(`https://tpeo-todo.vercel.app/tasks/${task.id}`, {
-      method: "DELETE"
-    })
-    .then(response => response.json())
-    .then(() => {
-      const updatedTaskList = taskList.filter((existingTask) => existingTask.id !== task.id);
-      setTaskList(updatedTaskList);
-    })
-    .catch(error => console.error("FAILED TO DELETE TASK: ", error));
+    currentUser.getIdToken().then(token => {
+      fetch(`${process.env.REACT_APP_BACKEND}/tasks/${task.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+        .then(response => response.json())
+        .then(() => {
+          const updatedTaskList = taskList.filter((existingTask) => existingTask.id !== task.id);
+          setTaskList(updatedTaskList);
+        })
+        .catch(error => console.error("FAILED TO DELETE TASK: ", error));
+    });
   }
 
   // Function to compute a message indicating how many tasks are unfinished.
