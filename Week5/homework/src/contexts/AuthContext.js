@@ -12,7 +12,7 @@ import {
 // the component tree without having to pass props down manually at every level.
 const AuthContext = createContext();
 const firebaseConfig = {
-    apiKey: "AIzaSyDecxPbP3JWySBLzEOUU_nk4xDJKbxYUB4",
+    apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
     authDomain: "todo-app-64719.firebaseapp.com",
     databaseURL: "https://todo-app-64719-default-rtdb.firebaseio.com",
     projectId: "todo-app-64719",
